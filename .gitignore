@@ -33,3 +33,7 @@ Thumbs.db
 # Benchmarks output
 benchmarks/results/*.json
 !benchmarks/results/.gitkeep
+
+# runtime logs
+*.log
+bench_*.txt

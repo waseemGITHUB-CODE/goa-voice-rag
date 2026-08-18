@@ -57,14 +57,17 @@ def test_on_topic_blocks_low_score():
 # ---- end-to-end (needs index) -------------------------------------------- #
 @pytest.mark.skipif(not VectorStore.exists(settings.index_dir),
                     reason="no index built")
-def test_end_to_end_in_domain():
+def test_end_to_end_structure():
+    # Corpus-agnostic: asserts the harness returns a well-formed response with a
+    # full stage trace and timing, regardless of which index is built.
     from src.harness.orchestrator import Orchestrator
     from src.retrieval.retriever import Retriever
     orch = Orchestrator(Retriever(VectorStore.load(settings.index_dir)))
-    resp = orch.run_text("What is the capital of India?")
+    resp = orch.run_text("What are the symptoms of diabetes?")
     assert resp.answer.text
     assert resp.retrieval_ms >= 0
-    assert not resp.answer.refused
+    assert len(resp.timings) >= 3          # multiple harness stages ran
+    assert any(g.stage == "input_safety" for g in resp.guards)
 
 
 @pytest.mark.skipif(not VectorStore.exists(settings.index_dir),

@@ -126,20 +126,20 @@ local and deterministic: query embedding + FAISS search + rerank + guardrails. L
 (they are not part of the deterministic retrieval SLA).
 
 Measured on a 16-core CPU, 300 iterations across 14 unique queries (incl. an
-out-of-domain and a Hindi query), embeddings `paraphrase-multilingual-MiniLM-L12-v2`,
-`EMBED_THREADS=3`:
+out-of-domain and a Hindi query), against the **real 4,379-passage MSMARCO-XI
+index**, embeddings `paraphrase-multilingual-MiniLM-L12-v2`, `EMBED_THREADS=3`:
 
 ```
   Core retrieval (the <200ms SLA)   P50      P70      P90     P100
-  ms                                67.8     71.4     77.9    110.2     ✅ PASS
+  ms                                70.9     75.8     99.5    116.7     ✅ PASS
 
   Total pipeline (mock LLM)         P50      P70      P90     P100
-  ms                               442.4    459.3    472.1    628.2
+  ms                               100.0    459.1    549.1    701.6
 ```
 
 **Reproduce:** `python -m benchmarks.latency --iters 300` (writes JSON to `benchmarks/results/`).
 
-- **Core retrieval P100 = 110 ms** — worst case is ~45% under the 200 ms SLA.
+- **Core retrieval P100 = 117 ms** — worst case is ~42% under the 200 ms SLA, on the real index.
 - *Total pipeline* here uses the deterministic mock generator so numbers are
   reproducible; the extra time vs. retrieval is the groundedness guardrail's
   verification embeddings. Live **STT (Sarvam)** and **LLM (Grok/Claude)** are

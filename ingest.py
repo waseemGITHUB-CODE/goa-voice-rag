@@ -48,38 +48,68 @@ SAMPLE_CORPUS = [
 ]
 
 
-def _iter_dataset_passages(max_passages: int):
-    """Yield (doc_id, language, text) from MSMARCO-XI, auto-detecting the text field."""
-    from datasets import load_dataset
-    print(f"[ingest] streaming {settings.dataset_name} "
-          f"config={settings.dataset_config} split={settings.dataset_split}")
-    ds = load_dataset(settings.dataset_name, settings.dataset_config,
-                      split=settings.dataset_split, streaming=True)
+def _download_dataset_file() -> str:
+    """Fetch one MSMARCO-XI repo parquet file locally (resumable — survives the
+    connection resets that plague large HF range reads). Returns the local path."""
+    from huggingface_hub import hf_hub_download
+    print(f"[ingest] downloading {settings.dataset_name}:{settings.dataset_file} "
+          f"(resumable; ~0.4–0.5GB)…")
+    return hf_hub_download(repo_id=settings.dataset_name,
+                           filename=settings.dataset_file, repo_type="dataset")
 
-    text_fields = ("passage", "text", "document", "positive_passages",
-                   "passage_text", "content", "answers")
-    seen = 0
-    for i, row in enumerate(ds):
-        text = None
-        for f in text_fields:
-            if f in row and row[f]:
-                val = row[f]
-                if isinstance(val, list):
-                    val = " ".join(str(x) for x in val if x)
-                if isinstance(val, dict):
-                    val = " ".join(str(v) for v in val.values() if v)
-                text = str(val)
-                break
-        if not text:
-            # last resort: longest string field in the row
-            strs = [str(v) for v in row.values() if isinstance(v, str)]
-            text = max(strs, key=len) if strs else None
-        if not text or len(text.strip()) < 20:
-            continue
-        yield (f"msmarco_{i}", settings.dataset_config, text.strip())
-        seen += 1
-        if seen >= max_passages:
-            break
+
+def _iter_dataset_passages(max_passages: int, include_translated: bool = True):
+    """Yield (doc_id, language, text) passages from ai4bharat/MSMARCO-XI.
+
+    Schema: each row is a query carrying a nested `passages` group with parallel
+    lists:
+        passages.English_passages   : list[str]  (source MS MARCO passages)
+        passages.Translated_passages: list[str]  (Indic translations)
+        passages.is_selected        : list[int]  (1 = gold/relevant for the query)
+
+    The shards are single monolithic row groups (~1GB decoded), and the HF
+    streaming loader can't convert this nested struct in chunked form — so we
+    download one file and read it locally with pyarrow, selecting only the two
+    columns we need, dedup by content, and stamp is_selected / query_id into the
+    doc id for provenance.
+    """
+    import pyarrow.parquet as pq
+
+    local = _download_dataset_file()
+    pf = pq.ParquetFile(local)
+    print(f"[ingest] reading {settings.dataset_file}: "
+          f"{pf.metadata.num_rows} rows, {pf.num_row_groups} row group(s)")
+
+    seen: set[int] = set()
+    yielded = 0
+    for batch in pf.iter_batches(batch_size=200, columns=["query_id", "passages"]):
+        for row in batch.to_pylist():
+            p = row.get("passages") or {}
+            qid = row.get("query_id", yielded)
+            eng = p.get("English_passages") or []
+            trans = p.get("Translated_passages") or []
+            sel = p.get("is_selected") or []
+
+            streams = [("en", eng)]
+            if include_translated and trans:
+                streams.append(("xi", trans))   # cross-lingual Indic translation
+
+            for lang, plist in streams:
+                for j, text in enumerate(plist):
+                    if not text or len(str(text).strip()) < 20:
+                        continue
+                    text = str(text).strip()
+                    h = hash(text)
+                    if h in seen:
+                        continue
+                    seen.add(h)
+                    is_sel = sel[j] if j < len(sel) else 0
+                    tag = "gold" if is_sel else "cand"
+                    yield (f"q{qid}_{lang}_p{j}_{tag}", lang, text)
+                    yielded += 1
+                    if yielded >= max_passages:
+                        print("[ingest] reached passage cap")
+                        return
 
 
 def build(sample: bool, max_passages: int, strategy: str) -> None:
@@ -125,8 +155,12 @@ if __name__ == "__main__":
     ap.add_argument("--max", type=int, default=settings.max_passages)
     ap.add_argument("--config", type=str, default=None,
                     help="dataset language config (overrides .env)")
+    ap.add_argument("--hf-file", type=str, default=None,
+                    help="repo file to ingest, e.g. validation/tamval.parquet")
     ap.add_argument("--strategy", type=str, default=settings.chunk_strategy)
     args = ap.parse_args()
     if args.config:
         settings.dataset_config = args.config
+    if args.hf_file:
+        settings.dataset_file = args.hf_file
     build(sample=args.sample, max_passages=args.max, strategy=args.strategy)

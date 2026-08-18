@@ -39,7 +39,9 @@ class Settings(BaseSettings):
     rerank_top_n: int = Field(3, alias="RERANK_TOP_N")
 
     # --- Guardrails ---
-    min_retrieval_score: float = Field(0.60, alias="MIN_RETRIEVAL_SCORE")
+    # Calibrated for paraphrase-multilingual-MiniLM on MSMARCO-XI: relevant
+    # matches score ~0.55-0.75, clearly off-topic queries ~0.2-0.3.
+    min_retrieval_score: float = Field(0.45, alias="MIN_RETRIEVAL_SCORE")
     groundedness_threshold: float = Field(0.35, alias="GROUNDEDNESS_THRESHOLD")
     enable_llm_groundedness: bool = Field(False, alias="ENABLE_LLM_GROUNDEDNESS")
 
@@ -50,8 +52,11 @@ class Settings(BaseSettings):
 
     # --- Dataset ---
     dataset_name: str = Field("ai4bharat/MSMARCO-XI", alias="DATASET_NAME")
-    dataset_config: str = Field("en", alias="DATASET_CONFIG")
+    dataset_config: str = Field("default", alias="DATASET_CONFIG")
     dataset_split: str = Field("train", alias="DATASET_SPLIT")
+    # A specific repo file to ingest. The validation shards (~460MB) are far
+    # smaller than the 3.7GB train shards; each is one language's translations.
+    dataset_file: str = Field("validation/hinval.parquet", alias="DATASET_FILE")
     max_passages: int = Field(5000, alias="MAX_PASSAGES")
     chunk_strategy: str = Field("metadata_recursive", alias="CHUNK_STRATEGY")
     chunk_size: int = Field(512, alias="CHUNK_SIZE")
