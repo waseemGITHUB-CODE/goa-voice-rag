@@ -1,0 +1,24 @@
+# --- Web / harness ---
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.19
+pydantic==2.10.4
+pydantic-settings==2.7.1
+
+# --- Retrieval (local, no torch, ONNX-based -> fast + easy install) ---
+fastembed==0.5.1
+faiss-cpu==1.9.0.post1
+numpy==2.2.1
+
+# --- Data ingestion ---
+datasets==3.2.0
+tqdm==4.67.1
+
+# --- STT + LLM API clients ---
+httpx==0.28.1
+openai==1.59.6      # used for Grok (xAI) via OpenAI-compatible base_url, and OpenAI
+anthropic==0.42.0  # optional: Claude generation
+
+# --- Utilities ---
+orjson==3.10.13
+python-dotenv==1.0.1
