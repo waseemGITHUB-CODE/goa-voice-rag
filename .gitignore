@@ -37,3 +37,8 @@ benchmarks/results/*.json
 # runtime logs
 *.log
 bench_*.txt
+
+# tunnel binary (downloaded on demand by run_demo.ps1)
+tools/
+*.err.log
+demo_run.log
