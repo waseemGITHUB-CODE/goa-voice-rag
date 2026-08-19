@@ -15,13 +15,16 @@ class Settings(BaseSettings):
     )
 
     # --- STT ---
-    stt_provider: str = Field("mock", alias="STT_PROVIDER")
+    # Defaults to real providers; each provider safely falls back to mock when
+    # its API key is absent, so the app runs keyless locally AND lights up on a
+    # deploy that only supplies the two secret keys.
+    stt_provider: str = Field("sarvam", alias="STT_PROVIDER")
     sarvam_api_key: str = Field("", alias="SARVAM_API_KEY")
     sarvam_stt_model: str = Field("saarika:v2", alias="SARVAM_STT_MODEL")
     sarvam_stt_language: str = Field("unknown", alias="SARVAM_STT_LANGUAGE")
 
     # --- Generation ---
-    llm_provider: str = Field("mock", alias="LLM_PROVIDER")
+    llm_provider: str = Field("grok", alias="LLM_PROVIDER")
     llm_model: str = Field("grok-3", alias="LLM_MODEL")
     llm_temperature: float = Field(0.1, alias="LLM_TEMPERATURE")
     xai_api_key: str = Field("", alias="XAI_API_KEY")
