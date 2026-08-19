@@ -1,4 +1,5 @@
-# Hugging Face Spaces (SDK: Docker) — exposes port 7860
+# Portable container image — runs on any Docker host (Render, Railway, Fly, a VM).
+# Exposes port 7860; start with `python app.py`.
 FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1 \

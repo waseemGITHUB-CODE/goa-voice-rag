@@ -1,15 +1,3 @@
-<!-- Hugging Face Spaces reads this YAML front-matter to configure the Space. -->
----
-title: Voice RAG Goa
-emoji: 🎙️
-colorFrom: indigo
-colorTo: blue
-sdk: docker
-app_port: 7860
-pinned: false
-license: mit
----
-
 # 🎙️ Voice-Enabled RAG — HH Goa 2026
 
 A production-shaped **voice → speech-to-text → retrieval → grounded answer** pipeline,
@@ -17,7 +5,7 @@ built on the [`ai4bharat/MSMARCO-XI`](https://huggingface.co/datasets/ai4bharat/
 Indic dataset, wrapped in a real orchestration **harness** with **guardrails** and
 **sub-200 ms** core retrieval.
 
-> **Live demo:** _<add your Hugging Face Space URL>_ · **Tag:** `#RAGInGoa`
+> **Live demo:** run `run_demo.ps1` for a public link · **Tag:** `#RAGInGoa`
 
 ```
  🎤 Voice ──▶ Sarvam STT ──▶ Guardrails(in) ──▶ Chunk+Embed+FAISS retrieve
@@ -162,15 +150,24 @@ index**, embeddings `paraphrase-multilingual-MiniLM-L12-v2`, `EMBED_THREADS=3`:
 
 ---
 
-## Deploy to Hugging Face Spaces
+## Run it live (public URL)
 
-1. Create a **Docker** or **Gradio/Python** Space (SDK: *Docker* recommended; entry `python app.py`, port **7860**).
-2. Add `SARVAM_API_KEY`, `XAI_API_KEY` as **Space secrets**.
-3. Commit this repo; on boot it builds the sample index automatically (or run `ingest.py` in the Dockerfile for the full dataset).
+**One command** starts the server + a free Cloudflare tunnel and prints a public link:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File run_demo.ps1
+```
+
+No account or hosting cost — the link is live while the launcher window is open.
+
+**Any Docker host** (Render / Railway / Fly / a VM) works too — a portable
+[`Dockerfile`](Dockerfile) is included (`python app.py`, port `7860`). Provide
+`GROQ_API_KEY` + `SARVAM_API_KEY` as env vars/secrets. The pre-built real index
+ships in the repo, so it boots with real data immediately.
 
 ---
 
 ## Tech
-Sarvam STT · fastembed (ONNX, multilingual-e5) · FAISS · FastAPI · Pydantic · Grok/Claude · vanilla-JS UI
+Sarvam STT · fastembed (ONNX, `paraphrase-multilingual-MiniLM-L12-v2`) · FAISS · FastAPI · Pydantic · Groq (`gpt-oss-120b`) / xAI / OpenAI · vanilla-JS UI
 
 `#RAGInGoa`
