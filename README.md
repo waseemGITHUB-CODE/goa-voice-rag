@@ -1,3 +1,15 @@
+<!-- Hugging Face Spaces reads this YAML front-matter to configure the Space. -->
+---
+title: Voice RAG Goa
+emoji: 🎙️
+colorFrom: indigo
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+license: mit
+---
+
 # 🎙️ Voice-Enabled RAG — HH Goa 2026
 
 A production-shaped **voice → speech-to-text → retrieval → grounded answer** pipeline,

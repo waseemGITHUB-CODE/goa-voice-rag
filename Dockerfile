@@ -17,9 +17,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Build a starter index at image-build time so the Space boots ready.
-# For the full dataset, swap for:  RUN python ingest.py --config en --max 5000
-RUN python ingest.py --sample
+# The repo ships a pre-built real MSMARCO-XI index (data/index, ~9MB), so the
+# Space boots with real data instantly. If it's ever missing, fall back to the
+# tiny offline sample so the app still starts.
+RUN test -f data/index/index.faiss || python ingest.py --sample
 
 EXPOSE 7860
 CMD ["python", "app.py"]
