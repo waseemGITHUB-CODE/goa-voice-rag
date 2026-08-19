@@ -69,6 +69,9 @@ def generate(query: str, chunks: list[RetrievedChunk]) -> Answer:
     if provider == "grok":
         text = _openai_compatible(query, chunks, base_url=settings.xai_base_url,
                                   api_key=settings.xai_api_key)
+    elif provider == "groq":
+        text = _openai_compatible(query, chunks, base_url=settings.groq_base_url,
+                                  api_key=settings.groq_api_key)
     elif provider == "openai":
         text = _openai_compatible(query, chunks, base_url=None,
                                   api_key=settings.openai_api_key)

@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     xai_base_url: str = Field("https://api.x.ai/v1", alias="XAI_BASE_URL")
     anthropic_api_key: str = Field("", alias="ANTHROPIC_API_KEY")
     openai_api_key: str = Field("", alias="OPENAI_API_KEY")
+    # Groq (groq.com) — free tier, OpenAI-compatible. NB: different company from xAI Grok.
+    groq_api_key: str = Field("", alias="GROQ_API_KEY")
+    groq_base_url: str = Field("https://api.groq.com/openai/v1", alias="GROQ_BASE_URL")
 
     # --- Retrieval ---
     embed_model: str = Field(
